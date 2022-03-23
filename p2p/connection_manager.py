@@ -121,7 +121,8 @@ class ConnectionManager:
                 print('Refresh the core node list...')
                 new_core_set = pickle.loads(payload.encode('utf8'))
                 print('latest core node list: ', new_core_set)
-                self.core_node_set = new_core_set
+                self.core_node_set = CoreNodeList()
+                self.core_node_set.overwrite(new_core_set)
             else:
                 print('received unknown command', cmd)
                 return
