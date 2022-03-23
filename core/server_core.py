@@ -33,7 +33,7 @@ class ServerCore:
     def shutdown(self):
         self.server_state = STATE_SHUTTING_DOWN
         print('Shutdown server...')
-        self.cm.connection_close
+        self.cm.connection_close()
 
     def get_my_current_state(self):
         return self.server_state

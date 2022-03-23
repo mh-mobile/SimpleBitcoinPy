@@ -12,6 +12,8 @@ class ConnectionManager:
         print('Initializing ConnectionManager...')
         self.host = host
         self.port = my_port
+        self.my_c_host = None
+        self.my_c_port = None
         self.core_node_set = CoreNodeList()
         self.__add_peer((host, my_port))
         self.mm = MessageManager()
@@ -59,8 +61,9 @@ class ConnectionManager:
         s.close()
 
         self.ping_timer.cancel()
-        msg = self.mm.build(MSG_REMOVE, self.port)
-        self.send_msg((self.my_c_host, self.my_c_port), msg)
+        if self.my_c_host is not None:
+            msg = self.mm.build(MSG_REMOVE, self.port)
+            self.send_msg((self.my_c_host, self.my_c_port), msg)
 
     def __handle_message(self, params):
         soc, addr, data_sum = params
@@ -184,14 +187,17 @@ class ConnectionManager:
         executor = ThreadPoolExecutor(max_workers=10)
 
         while True:
-            print('Wating for the connection ....')
-            soc, addr = self.socket.accept()
-            print('Connected by ...', addr)
-            data_sum = ''
+            try:
+                print('Wating for the connection ....')
+                soc, addr = self.socket.accept()
 
-            params = (soc, addr, data_sum)
-            executor.submit(self.__handle_message, params)
+                print('Connected by ...', addr)
+                data_sum = ''
 
+                params = (soc, addr, data_sum)
+                executor.submit(self.__handle_message, params)
+            except socket.error:
+                break
 
 if __name__ == '__main__':
     manager = ConnectionManager("127.0.0.1", 8080)
