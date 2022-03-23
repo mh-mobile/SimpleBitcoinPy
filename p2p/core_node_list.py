@@ -1,5 +1,6 @@
 import threading
 
+
 class CoreNodeList:
     def __init__(self):
         self.lock = threading.Lock()
@@ -17,7 +18,7 @@ class CoreNodeList:
                 print('Removing peer: ', peer)
                 self.list.remove(peer)
                 print('Current Core list: ', self.list)
-    
+
     def overwrite(self, new_list):
         with self.lock:
             print('core node list will be going to overwrite')

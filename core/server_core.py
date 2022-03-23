@@ -7,9 +7,10 @@ STATE_STANBY = 1
 STATE_CONNECTED_TO_NETWORK = 2
 STATE_SHUTTING_DOWN = 3
 
+
 class ServerCore:
     def __init__(self, my_port=50082, core_node_host=None,
-                    core_node_port=None):
+                 core_node_port=None):
         self.server_state = STATE_INIT
         print('Initializing server...')
         self.my_ip = self.__get__myip()
@@ -42,6 +43,7 @@ class ServerCore:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(('8.8.8.8', 80))
         return s.getsockname()[0]
+
 
 if __name__ == '__main__':
     core = ServerCore()

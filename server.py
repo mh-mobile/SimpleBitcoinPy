@@ -1,9 +1,9 @@
 from concurrent.futures import ThreadPoolExecutor
-from multiprocessing.pool import ThreadPool
 import socket
 import os
 
 from cv2 import add
+
 
 def __handle_message(args_tuple):
     conn, addr, data_sum = args_tuple
@@ -17,10 +17,12 @@ def __handle_message(args_tuple):
         if data_sum != '':
             print(data_sum)
 
+
 def __get_myip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(('8.8.8.8', 80))
     return s.getsockname()[0]
+
 
 def main():
     my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

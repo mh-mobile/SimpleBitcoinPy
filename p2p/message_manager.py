@@ -18,12 +18,13 @@ ERR_VERSION_UNMATCH = 1
 OK_WITH_PAYLOAD = 2
 OK_WITHOUT_PAYLOAD = 3
 
+
 class MessageManager:
     def __init__(self):
         print('Initializing MessageManager...')
 
     def build(self, msg_type, my_port=50082, payload=None):
-        
+
         message = {
             'protocol': PROTOCOL_NAME,
             'version': MY_VERSION,
@@ -53,9 +54,9 @@ class MessageManager:
         else:
             return ('ok', OK_WITHOUT_PAYLOAD, cmd, my_port, None)
 
+
 if __name__ == '__main__':
     manager = MessageManager()
     msg = manager.build(MSG_ADD)
     print(msg)
     print(manager.parse(msg))
-    

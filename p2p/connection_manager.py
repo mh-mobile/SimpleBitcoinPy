@@ -7,6 +7,7 @@ import socket
 
 PING_INTERVAL = 1800
 
+
 class ConnectionManager:
     def __init__(self, host, my_port):
         print('Initializing ConnectionManager...')
@@ -22,7 +23,8 @@ class ConnectionManager:
         t = threading.Thread(target=self.__wait_for_access)
         t.start()
 
-        self.ping_timer = threading.Timer(PING_INTERVAL, self.__check_peers_connection)
+        self.ping_timer = threading.Timer(
+            PING_INTERVAL, self.__check_peers_connection)
         self.ping_timer.start()
 
     def join_network(self, host, port):
@@ -68,7 +70,7 @@ class ConnectionManager:
     def __handle_message(self, params):
         soc, addr, data_sum = params
 
-        while True: 
+        while True:
             data = soc.recv(1024)
             data_sum = data_sum + data.decode('utf-8')
 
@@ -92,10 +94,11 @@ class ConnectionManager:
             if cmd == MSG_ADD:
                 print('Add node request was received!!')
                 self.__add_peer((addr[0], peer_port))
-                if (addr[0], peer_port) ==(self.host, self.port):
+                if (addr[0], peer_port) == (self.host, self.port):
                     return
                 else:
-                    cl = pickle.dumps(self.core_node_set.get_list(), 0).decode()
+                    cl = pickle.dumps(
+                        self.core_node_set.get_list(), 0).decode()
                     msg = self.mm.build(MSG_CORE_LIST, self.port, cl)
                     self.send_msg_to_all_peer(msg)
             elif cmd == MSG_REMOVE:
@@ -140,8 +143,9 @@ class ConnectionManager:
         print('check_peers_connection was called')
         current_core_list = self.core_node_set.get_list()
         changed = False
-        dead_c_node_set = list(filter(lambda p: not self.__is_alive(p), current_core_list))
-        
+        dead_c_node_set = list(
+            filter(lambda p: not self.__is_alive(p), current_core_list))
+
         if dead_c_node_set:
             changed = True
             print('Removing ', dead_c_node_set)
@@ -156,7 +160,8 @@ class ConnectionManager:
             msg = self.mm.build(MSG_CORE_LIST, self.port, cl)
             self.send_msg_to_all_peer(msg)
 
-        self.ping_timer = threading.Timer(PING_INTERVAL, self.__check_peers_connection)
+        self.ping_timer = threading.Timer(
+            PING_INTERVAL, self.__check_peers_connection)
         self.ping_timer.start()
 
     def __is_alive(self, target):
@@ -177,7 +182,6 @@ class ConnectionManager:
             return True
         except OSError:
             return False
-        
 
     def __wait_for_access(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -199,6 +203,8 @@ class ConnectionManager:
             except socket.error:
                 break
 
+
 if __name__ == '__main__':
     manager = ConnectionManager("127.0.0.1", 8080)
-    print("host: {host}, port: {port}".format(host=manager.host, port=manager.port))
+    print("host: {host}, port: {port}".format(
+        host=manager.host, port=manager.port))
