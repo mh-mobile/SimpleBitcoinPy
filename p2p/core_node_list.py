@@ -2,7 +2,7 @@ import threading
 
 class CoreNodeList:
     def __init__(self):
-        self.lock = threading.lock()
+        self.lock = threading.Lock()
         self.list = set()
 
     def add(self, peer):

@@ -1,8 +1,7 @@
 import pickle
 import threading
-from message_manager import ERR_PROTOCOL_UNMATCH, ERR_VERSION_UNMATCH, MSG_ADD, MSG_CORE_LIST, MSG_PING, MSG_REMOVE, MSG_REQUEST_CORE_LIST, OK_WITH_PAYLOAD, OK_WITHOUT_PAYLOAD, MessageManager
+from .message_manager import ERR_PROTOCOL_UNMATCH, ERR_VERSION_UNMATCH, MSG_ADD, MSG_CORE_LIST, MSG_PING, MSG_REMOVE, MSG_REQUEST_CORE_LIST, OK_WITH_PAYLOAD, OK_WITHOUT_PAYLOAD, MessageManager
 from concurrent.futures import ThreadPoolExecutor
-from multiprocessing.pool import ThreadPool
 from .core_node_list import CoreNodeList
 import socket
 
