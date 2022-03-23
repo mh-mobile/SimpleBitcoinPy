@@ -157,7 +157,7 @@ class ConnectionManager:
         print('current core node list:', current_core_list)
 
         if changed:
-            cl = pickle.dumps(self.core_node_set, 0).decode()
+            cl = pickle.dumps(current_core_list, 0).decode()
             msg = self.mm.build(MSG_CORE_LIST, self.port, cl)
             self.send_msg_to_all_peer(msg)
 
