@@ -1,8 +1,9 @@
 import pickle
 import threading
-from .message_manager import ERR_PROTOCOL_UNMATCH, ERR_VERSION_UNMATCH, MSG_ADD, MSG_CORE_LIST, MSG_PING, MSG_REMOVE, MSG_REQUEST_CORE_LIST, OK_WITH_PAYLOAD, OK_WITHOUT_PAYLOAD, MessageManager
+from .message_manager import ERR_PROTOCOL_UNMATCH, ERR_VERSION_UNMATCH, MSG_ADD, MSG_ADD_AS_EDGE, MSG_CORE_LIST, MSG_PING, MSG_REMOVE, MSG_REMOVE_EDGE, MSG_REQUEST_CORE_LIST, OK_WITH_PAYLOAD, OK_WITHOUT_PAYLOAD, MessageManager
 from concurrent.futures import ThreadPoolExecutor
 from .core_node_list import CoreNodeList
+from .edge_node_list import EdgeNodeList
 import socket
 
 PING_INTERVAL = 1800
@@ -16,6 +17,7 @@ class ConnectionManager:
         self.my_c_host = None
         self.my_c_port = None
         self.core_node_set = CoreNodeList()
+        self.edge_node_set = EdgeNodeList()
         self.__add_peer((host, my_port))
         self.mm = MessageManager()
 
@@ -113,6 +115,13 @@ class ConnectionManager:
                 cl = pickle.dumps(self.core_node_set.get_list(), 0).decode()
                 msg = self.mm.build(MSG_CORE_LIST, self.port, cl)
                 self.send_msg((addr[0], peer_port), msg)
+            elif cmd == MSG_ADD_AS_EDGE:
+                self.__add_edge_node((addr[0], peer_port))
+                cl = pickle.dumps(self.core_node_set.get_list(), 0).decode()
+                msg = self.mm.build(MSG_CORE_LIST, self.port, cl)
+                self.send_msg((addr[0], peer_port), msg)
+            elif cmd == MSG_REMOVE_EDGE:
+                self.__remove_edge_node((addr[0], peer_port))
             else:
                 print('recieved unknown command', cmd)
                 return
@@ -203,6 +212,12 @@ class ConnectionManager:
                 executor.submit(self.__handle_message, params)
             except socket.error:
                 break
+
+    def __add_edge_node(self, edge):
+        self.edge_node_set.add((edge))
+
+    def __remove_edge_node(self, edge):
+        self.edge_node_set.remove(edge)
 
 
 if __name__ == '__main__':
