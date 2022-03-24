@@ -54,10 +54,12 @@ class MessageManager:
             return ('error', ERR_PROTOCOL_UNMATCH, None, None, None)
         elif msg_ver > StrictVersion(MY_VERSION):
             return ('error', ERR_PROTOCOL_UNMATCH, None, my_port, None)
-        elif cmd == MSG_CORE_LIST:
-            return ('ok', OK_WITH_PAYLOAD, cmd, my_port, payload)
+        elif cmd in (MSG_CORE_LIST, MSG_NEW_TRANSACTION, MSG_NEW_BLOCK, RSP_FULL_CHAIN, MSG_ENHANCED):
+            result_type = OK_WITH_PAYLOAD
+            return ('ok', result_type, cmd, my_port, payload)
         else:
-            return ('ok', OK_WITHOUT_PAYLOAD, cmd, my_port, None)
+            result_type = OK_WITHOUT_PAYLOAD
+            return ('ok', result_type, cmd, my_port, None)
 
 
 if __name__ == '__main__':
