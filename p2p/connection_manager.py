@@ -116,6 +116,7 @@ class ConnectionManager:
                 msg = self.mm.build(MSG_CORE_LIST, self.port, cl)
                 self.send_msg((addr[0], peer_port), msg)
             elif cmd == MSG_ADD_AS_EDGE:
+                print('ADD request for Edge node was received!!')
                 self.__add_edge_node((addr[0], peer_port))
                 cl = pickle.dumps(self.core_node_set.get_list(), 0).decode()
                 msg = self.mm.build(MSG_CORE_LIST, self.port, cl)
