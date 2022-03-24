@@ -30,7 +30,7 @@ class ClientCore:
     def get_my_curent_state(self):
         return self.client_state
 
-    def __get_myip():
+    def __get_myip(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(('8.8.8.8', 80))
         return s.getsockname()[0]
