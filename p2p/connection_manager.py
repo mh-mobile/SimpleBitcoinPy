@@ -1,3 +1,4 @@
+from email import message
 import pickle
 import threading
 from .message_manager import ERR_PROTOCOL_UNMATCH, ERR_VERSION_UNMATCH, MSG_ADD, MSG_ADD_AS_EDGE, MSG_CORE_LIST, MSG_PING, MSG_REMOVE, MSG_REMOVE_EDGE, MSG_REQUEST_CORE_LIST, OK_WITH_PAYLOAD, OK_WITHOUT_PAYLOAD, MessageManager
@@ -6,11 +7,11 @@ from .core_node_list import CoreNodeList
 from .edge_node_list import EdgeNodeList
 import socket
 
-PING_INTERVAL = 1800
+PING_INTERVAL = 10
 
 
 class ConnectionManager:
-    def __init__(self, host, my_port):
+    def __init__(self, host, my_port, callback):
         print('Initializing ConnectionManager...')
         self.host = host
         self.port = my_port
@@ -20,6 +21,7 @@ class ConnectionManager:
         self.edge_node_set = EdgeNodeList()
         self.__add_peer((host, my_port))
         self.mm = MessageManager()
+        self.callback = callback
 
     def start(self):
         t = threading.Thread(target=self.__wait_for_access)
@@ -125,6 +127,7 @@ class ConnectionManager:
                 self.__remove_edge_node((addr[0], peer_port))
             else:
                 print('recieved unknown command', cmd)
+                self.callback(message, (addr[0], peer_port))
                 return
         elif status == ('ok', OK_WITH_PAYLOAD):
             if cmd == MSG_CORE_LIST:
@@ -135,6 +138,7 @@ class ConnectionManager:
                 self.core_node_set.overwrite(new_core_set)
             else:
                 print('received unknown command', cmd)
+                self.callback(message, (addr[0], peer_port))
                 return
         else:
             print('Unexpected status', status)

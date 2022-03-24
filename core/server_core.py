@@ -1,6 +1,7 @@
 import socket
 
 from p2p.connection_manager import ConnectionManager
+from p2p.message_manager import MSG_ENHANCED, MSG_NEW_TRANSACTION, MSG_NEW_BLOCK, RSP_FULL_CHAIN
 
 STATE_INIT = 0
 STATE_STANBY = 1
@@ -43,6 +44,19 @@ class ServerCore:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(('8.8.8.8', 80))
         return s.getsockname()[0]
+
+    def _handle_mesasge(self, msg, peer=None):
+        if peer is not None:
+            print('Send our latest blockchain for reply to : ', peer)
+        else:
+            if msg[2] == MSG_NEW_TRANSACTION:
+                pass
+            elif msg[2] == MSG_NEW_BLOCK:
+                pass
+            elif msg[2] == RSP_FULL_CHAIN:
+                pass
+            elif msg[2] == MSG_ENHANCED:
+                pass
 
 
 if __name__ == '__main__':
