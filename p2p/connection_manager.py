@@ -60,6 +60,13 @@ class ConnectionManager:
                 print('message will be sent to ... ', peer)
                 self.send_msg(peer, msg)
 
+    def send_msg_to_all_edge(self, msg):
+        print('send_msg_to_all_edge was called!')
+        for peer in self.edge_node_set.get_list():
+            if peer != (self.host, self.port):
+                print('message will be sent to ... ', peer)
+                self.send_msg(peer, msg)
+
     def connection_close(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.host, self.port))
@@ -224,6 +231,10 @@ class ConnectionManager:
 
     def __remove_edge_node(self, edge):
         self.edge_node_set.remove(edge)
+
+    def get_message_text(self, msg_type, payload=None):
+        msgtxt = self.mm.build(msg_type, self.port, payload)
+        return msgtxt
 
 
 if __name__ == '__main__':

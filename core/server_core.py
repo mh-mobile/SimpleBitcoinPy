@@ -3,6 +3,7 @@ import socket
 from p2p.connection_manager import ConnectionManager
 from p2p.message_manager import MSG_ENHANCED, MSG_NEW_TRANSACTION, MSG_NEW_BLOCK, RSP_FULL_CHAIN
 from p2p.my_protocol_message_handler import MyProtocolMessageHandler
+from p2p.my_protocol_message_store import MessageStore
 
 STATE_INIT = 0
 STATE_STANBY = 1
@@ -23,6 +24,7 @@ class ServerCore:
         self.mpmh = MyProtocolMessageHandler()
         self.core_node_host = core_node_host
         self.core_node_port = core_node_port
+        self.npm_store = MessageStore()
 
     def start(self):
         self.server_state = STATE_STANBY
@@ -59,7 +61,26 @@ class ServerCore:
             elif msg[2] == RSP_FULL_CHAIN:
                 pass
             elif msg[2] == MSG_ENHANCED:
-                self.mpmh.handle_message(msg[4])
+                print('received enhanced message', msg[4])
+                has_same = self.npm_store.has_this_msg(msg[4])
+                if has_same is not True:
+                    self.npm_store.add(msg[4])
+                    self.mpmh.handle_message(msg[4], self.__core_api)
+
+    def __core_api(self, request, message):
+
+        msg_type = MSG_ENHANCED
+
+        if request == 'send_message_to_all_peer':
+            new_message = self.cm.get_message_text(msg_type, message)
+            self.cm.send_msg_to_all_peer(new_message)
+            return 'ok'
+        elif request == 'send_message_to_all_edge':
+            new_message = self.cm.get_message_text(msg_type, message)
+            self.cm.send_msg_to_all_edge(new_message)
+            return 'ok'
+        elif request == 'api_type':
+            return 'server_core_api'
 
 
 if __name__ == '__main__':
