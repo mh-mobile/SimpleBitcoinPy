@@ -33,3 +33,6 @@ class CoreNodeList:
 
     def get_length(self):
         return len(self.list)
+
+    def has_this_peer(self, peer):
+        return peer in self.list

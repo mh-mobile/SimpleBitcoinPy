@@ -1,14 +1,22 @@
 import socket
+import threading
+import json
 
 from p2p.connection_manager import ConnectionManager
 from p2p.message_manager import MSG_ENHANCED, MSG_NEW_TRANSACTION, MSG_NEW_BLOCK, RSP_FULL_CHAIN
 from p2p.my_protocol_message_handler import MyProtocolMessageHandler
 from p2p.my_protocol_message_store import MessageStore
+from blockchain.block_builder import BlockBuilder
+from blockchain.blockchain_manager import BlockchainManager
+from transaction.transaction_pool import TransactionPool
 
 STATE_INIT = 0
 STATE_STANBY = 1
 STATE_CONNECTED_TO_NETWORK = 2
 STATE_SHUTTING_DOWN = 3
+
+
+CHECK_INTERVAL = 10
 
 
 class ServerCore:
@@ -25,6 +33,11 @@ class ServerCore:
         self.core_node_host = core_node_host
         self.core_node_port = core_node_port
         self.npm_store = MessageStore()
+        self.bb = BlockBuilder()
+        my_genesis_block = self.bb.generate_genesis_block()
+        self.bm = BlockchainManager(my_genesis_block.to_dict())
+        self.prev_block_hash = self.bm.get_hash(my_genesis_block.to_dict)
+        self.tp = TransactionPool()
 
     def start(self):
         self.server_state = STATE_STANBY
@@ -50,12 +63,26 @@ class ServerCore:
         s.connect(('8.8.8.8', 80))
         return s.getsockname()[0]
 
-    def __handle_mesasge(self, msg, peer=None):
+    def __handle_mesasge(self, msg, is_core, peer=None):
         if peer is not None:
             print('Send our latest blockchain for reply to : ', peer)
         else:
             if msg[2] == MSG_NEW_TRANSACTION:
-                pass
+                new_transaction = json.loads(msg[4])
+                print('received new_transaction', new_transaction)
+                current_transactions = self.tp.get_stored_transactions()
+                if new_transaction in current_transactions:
+                    print('this is already pooled transaction: ', t)
+                    return
+
+                if not is_core:
+                    self.tp.set_new_transaction(new_transaction)
+                    new_message = self.cm.get_message_text(
+                        MSG_NEW_TRANSACTION, json.dumps(new_transaction))
+                    self.cm.send_msg_to_all_peer(new_message)
+                else:
+                    self.tp.set_new_transaction(new_transaction)
+
             elif msg[2] == MSG_NEW_BLOCK:
                 pass
             elif msg[2] == RSP_FULL_CHAIN:
@@ -81,6 +108,26 @@ class ServerCore:
             return 'ok'
         elif request == 'api_type':
             return 'server_core_api'
+
+    def __generate_block_with_tp(self):
+        result = self.tp.get_stored_transactions()
+        print('generate_block_with_tp called!')
+        if len(result) == 0:
+            print('Transaction Pool is empty ...')
+
+        new_block = self.bb.generate_new_block(result, self.prev_block_hash)
+        self.bm.set_new_block(new_block.to_dict())
+        self.prev_block_hash = self.bm.get_hash(new_block.to_dict())
+        index = len(result)
+        self.tp.clear_my_transactions(index)
+
+        print('Current Blockchain is ...', self.bm.chain)
+        print('Current prev_block_hash is ... ', self.prev_block_hash)
+
+        self.bb_timer = threading.Timer(
+            CHECK_INTERVAL, self.__generate_block_with_tp)
+
+        self.bb_timer.start()
 
 
 if __name__ == '__main__':
