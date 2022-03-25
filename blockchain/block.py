@@ -15,3 +15,16 @@ class Block:
             "previous_block": self.previous_block,
         }
         return d
+
+
+class GenesisBlock(Block):
+    def __init__(self):
+        super().__init__(transaction='AD9B477B42B22CDF18B1335603D07378ACE83561D8398FBFC8DE94196C65D806',
+                         previous_block_hash=None)
+
+    def to_dict(self):
+        d = {
+            'transaction': self.transaction,
+            'genesis_block': True,
+        }
+        return d
