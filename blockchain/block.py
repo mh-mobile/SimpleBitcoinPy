@@ -1,5 +1,8 @@
+import binascii
+import hashlib
 from time import time
 import json
+import datetime
 
 
 class Block:
@@ -7,6 +10,31 @@ class Block:
         self.timestamp = time()
         self.transaction = transaction
         self.previous_block = previous_block_hash
+
+        current = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+        print(current)
+
+        json_block = json.dumps(self.to_dict(
+            include_nonce=False), sort_keys=True)
+        print('json_block : ', json_block)
+        self.nonce = self._compute_nonce_for_pow(json_block)
+
+        current2 = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+        print(current2)
+
+    def _compute_nonce_for_pow(self, message, difficulty=5):
+        i = 0
+        suffix = '0' * difficulty
+        while True:
+            nonce = str(i)
+            digest = binascii.hexlify(self._get_double_sha256(
+                (message + nonce).encode('utf-8'))).decode('ascii')
+            if digest.endswith(suffix):
+                return nonce
+            i += 1
+
+    def _get_double_sha256(self, message):
+        return hashlib.sha256(hashlib.sha256(message).digest()).digest()
 
     def to_dict(self):
         d = {
