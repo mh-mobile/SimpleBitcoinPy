@@ -36,12 +36,16 @@ class ServerCore:
         self.bb = BlockBuilder()
         my_genesis_block = self.bb.generate_genesis_block()
         self.bm = BlockchainManager(my_genesis_block.to_dict())
-        self.prev_block_hash = self.bm.get_hash(my_genesis_block.to_dict)
+        self.prev_block_hash = self.bm.get_hash(my_genesis_block.to_dict())
         self.tp = TransactionPool()
 
     def start(self):
         self.server_state = STATE_STANBY
         self.cm.start()
+
+        self.bb_timer = threading.Timer(
+            CHECK_INTERVAL, self.__generate_block_with_tp)
+        self.bb_timer.start()
 
     def join_network(self):
         if self.core_node_host is not None:
