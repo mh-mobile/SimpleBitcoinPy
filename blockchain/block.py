@@ -2,13 +2,15 @@ import binascii
 import hashlib
 from time import time
 import json
-import datetime
+from datetime import datetime
 
 
 class Block:
-    def __init__(self, transaction, previous_block_hash):
+    def __init__(self, transactions, previous_block_hash):
+        snap_tr = json.dumps(transactions)
+
         self.timestamp = time()
-        self.transaction = transaction
+        self.transactions = json.loads(snap_tr)
         self.previous_block = previous_block_hash
 
         current = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
@@ -21,6 +23,18 @@ class Block:
 
         current2 = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
         print(current2)
+
+    def to_dict(self, include_nonce=True):
+        d = {
+            'timestamp': self.timestamp,
+            'transactions': list(map(json.dumps, self.transactions)),
+            'previous_block': self.previous_block
+        }
+
+        if include_nonce:
+            d['nonce'] = self.nonce
+
+        return d
 
     def _compute_nonce_for_pow(self, message, difficulty=5):
         i = 0
@@ -36,23 +50,19 @@ class Block:
     def _get_double_sha256(self, message):
         return hashlib.sha256(hashlib.sha256(message).digest()).digest()
 
-    def to_dict(self):
-        d = {
-            "timestamp": self.timestamp,
-            "transaction": json.dumps(self.transaction),
-            "previous_block": self.previous_block,
-        }
-        return d
-
 
 class GenesisBlock(Block):
     def __init__(self):
-        super().__init__(transaction='AD9B477B42B22CDF18B1335603D07378ACE83561D8398FBFC8DE94196C65D806',
+        super().__init__(transactions='AD9B477B42B22CDF18B1335603D07378ACE83561D8398FBFC8DE94196C65D806',
                          previous_block_hash=None)
 
-    def to_dict(self):
+    def to_dict(self, include_nonce=True):
         d = {
-            'transaction': self.transaction,
+            'transaction': self.transactions,
             'genesis_block': True,
         }
+
+        if include_nonce:
+            d['nonce'] = self.nonce
+
         return d
