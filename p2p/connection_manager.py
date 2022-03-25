@@ -127,7 +127,8 @@ class ConnectionManager:
                 self.__remove_edge_node((addr[0], peer_port))
             else:
                 print('recieved unknown command', cmd)
-                self.callback(message, (addr[0], peer_port))
+                self.callback((result, reason, cmd, peer_port,
+                              payload), (addr[0], peer_port))
                 return
         elif status == ('ok', OK_WITH_PAYLOAD):
             if cmd == MSG_CORE_LIST:
@@ -138,7 +139,7 @@ class ConnectionManager:
                 self.core_node_set.overwrite(new_core_set)
             else:
                 print('received unknown command', cmd)
-                self.callback(message, (addr[0], peer_port))
+                self.callback((result, reason, cmd, peer_port, payload), None)
                 return
         else:
             print('Unexpected status', status)

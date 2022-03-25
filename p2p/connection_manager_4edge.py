@@ -156,3 +156,7 @@ class ConnectionManager4Edge(object):
 
         self.ping_timer = threading.Timer(PING_INTERVAL, self.__send_ping)
         self.ping_timer.start()
+
+    def get_message_text(self, msg_type, payload=None):
+        msgtxt = self.mm.build(msg_type, self.port, payload)
+        return msgtxt

@@ -14,6 +14,8 @@ class ClientCore:
         self.my_ip = self.__get_myip()
         print('Server IP address is set to ... ', self.my_ip)
         self.my_port = my_port
+        self.my_core_host = core_host
+        self.my_core_port = core_port
         self.cm = ConnectionManager4Edge(
             self.my_ip, my_port, core_host, core_port)
 
@@ -34,3 +36,7 @@ class ClientCore:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(('8.8.8.8', 80))
         return s.getsockname()[0]
+
+    def send_message_to_my_core_node(self, msg_type, msg):
+        msgtxt = self.cm.get_message_text(msg_type, msg)
+        self.cm.send_msg((self.my_core_host, self.my_core_port), msgtxt)
