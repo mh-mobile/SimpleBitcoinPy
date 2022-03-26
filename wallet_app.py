@@ -1,6 +1,12 @@
+import binascii
 from tkinter import *
 from tkinter import messagebox
+from tkinter import filedialog
+from tkinter import ttk
 from tkinter.ttk import Button, Style
+
+from utils.key_manager import KeyManager
+import os
 
 
 class SimpleBC_Gui(Frame):
@@ -18,6 +24,7 @@ class SimpleBC_Gui(Frame):
 
     def initApp(self):
         print('SimpleBitcoin client is now activating...')
+        self.km = KeyManager()
 
     def display_info(self, info):
         pass
@@ -37,8 +44,8 @@ class SimpleBC_Gui(Frame):
         self.menuBar.add_cascade(label='Menu', menu=self.subMenu)
         self.subMenu.add_command(
             label='Show My Address', command=self.show_my_address)
-        self.subMenu.add_command(label='Load my Keys',
-                                 command=self.load_my_keys)
+        self.subMenu.add_command(
+            label='Load my Keys', command=self.show_input_dialog_for_key_loading)
         self.subMenu.add_command(
             label='Update Blockchain', command=self.update_block_chain)
         self.subMenu.add_separator()
@@ -57,16 +64,90 @@ class SimpleBC_Gui(Frame):
             label='Show Blockchain', command=self.show_my_block_chain)
 
     def show_my_address(self):
-        pass
-
-    def load_my_keys(self):
-        pass
+        f = Tk()
+        label = Label(f, text='My Address')
+        label.pack()
+        key_info = Text(f, width=70, height=10)
+        my_address = self.km.my_address()
+        key_info.insert(INSERT, my_address)
+        key_info.pack()
 
     def update_block_chain(self):
         pass
 
+    def show_input_dialog_for_key_loading(self):
+        def load_my_keys():
+            # ファイル選択ダイアログの表示
+            f2 = Tk()
+            f2.withdraw()
+            fTyp = [('', '*.pem')]
+            iDir = os.path.abspath(os.path.dirname(__file__))
+            messagebox.showinfo(
+                'Load key pair', 'please choose your key file')
+            f_name = filedialog.askopenfilename(
+                filetypes=fTyp, initialdir=iDir)
+
+            try:
+                file = open(f_name)
+                data = file.read()
+                target = binascii.unhexlify(data)
+                self.km.import_key_pair(target, entry1.get())
+            except Exception as e:
+                print(e)
+            finally:
+                file.close()
+                f.destroy()
+                f2.destroy()
+                # self.um = UTXM(self.km.my_address())
+                # self.um.my_balance = 0
+                # self.update_balance()
+
+        f = Tk()
+        label0 = Label(
+            f, text='Please enter pass phrase for your key pair')
+        frame1 = ttk.Frame(f)
+        label1 = ttk.Label(frame1, text='Pass Phrase:')
+
+        entry1 = ttk.Entry(frame1)
+        button1 = ttk.Button(frame1, text='Load', command=load_my_keys)
+
+        label0.grid(row=0, column=0, sticky=(N, E, S, W))
+        frame1.grid(row=1, column=0, sticky=(N, E, S, W))
+        label1.grid(row=2, column=0, sticky=E)
+        entry1.grid(row=2, column=1, sticky=W)
+        button1.grid(row=3, column=1, sticky=W)
+
     def renew_my_keypairs(self):
-        pass
+        def save_my_pem():
+            self.km = KeyManager()
+            my_pem = self.km.export_key_pair(entry1.get())
+            my_pem_hex = binascii.hexlify(my_pem).decode('ascii')
+            # とりあえずファイル名は固定
+            path = 'my_key_pair.pem'
+            f1 = open(path, 'a')
+            f1.write(my_pem_hex)
+            f1.close()
+
+            f.destroy()
+            # self.um = UTXM(self.km.my_address())
+            # self.um.my_balance = 0
+            # self.update_balance()
+
+        f = Tk()
+        f.title('New Key Gene')
+        label0 = Label(
+            f, text='Please enter pass phrase for your new key pair')
+        frame1 = ttk.Frame(f)
+        label1 = ttk.Label(frame1, text='Pass Phrase:')
+
+        entry1 = ttk.Entry(frame1)
+        button1 = ttk.Button(frame1, text='Generate', command=save_my_pem)
+
+        label0.grid(row=0, column=0, sticky=(N, E, S, W))
+        frame1.grid(row=1, column=0, sticky=(N, E, S, W))
+        label1.grid(row=2, column=0, sticky=E)
+        entry1.grid(row=2, column=1, sticky=W)
+        button1.grid(row=3, column=1, sticky=W)
 
     def edit_conn_info(self):
         pass
