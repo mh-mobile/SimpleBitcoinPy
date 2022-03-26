@@ -112,11 +112,14 @@ class ConnectionManager:
                         self.core_node_set.get_list(), 0).decode()
                     msg = self.mm.build(MSG_CORE_LIST, self.port, cl)
                     self.send_msg_to_all_peer(msg)
+                    self.send_msg_to_all_edge(msg)
             elif cmd == MSG_REMOVE:
                 print('REMOVE request was received!! from', addr[0], peer_port)
                 self.__remove_peer((addr[0], peer_port))
                 cl = pickle.dumps(self.core_node_set.get_list(), 0).decode()
                 msg = self.mm.build(MSG_CORE_LIST, self.port, cl)
+                self.send_msg_to_all_peer(msg)
+                self.send_msg_to_all_edge(msg)
             elif cmd == MSG_PING:
                 return
             elif cmd == MSG_REQUEST_CORE_LIST:
@@ -237,6 +240,7 @@ class ConnectionManager:
 
     def get_message_text(self, msg_type, payload=None):
         msgtxt = self.mm.build(msg_type, self.port, payload)
+        print('generated_msg: ', msgtxt)
         return msgtxt
 
     def __is_in_core_set(self, peer):

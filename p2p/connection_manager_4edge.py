@@ -160,4 +160,5 @@ class ConnectionManager4Edge(object):
 
     def get_message_text(self, msg_type, payload=None):
         msgtxt = self.mm.build(msg_type, self.port, payload)
+        print('generated_msg: ', msgtxt)
         return msgtxt
