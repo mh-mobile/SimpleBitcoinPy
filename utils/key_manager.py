@@ -31,5 +31,5 @@ class KeyManager:
 
     def import_key_pair(self, key_data, pass_phrase):
         self._private_key = RSA.importKey(key_data, pass_phrase)
-        self._public_key = self._private_key.publicKey()
+        self._public_key = self._private_key.publickey()
         self._signer = PKCS1_v1_5.new(self._private_key)
