@@ -4,6 +4,7 @@ from tkinter import messagebox
 from tkinter import filedialog
 from tkinter import ttk
 from tkinter.ttk import Button, Style
+from p2p.message_manager import MSG_NEW_TRANSACTION
 from transaction.transaction import CoinbaseTransaction, Transaction, TransactionInput, TransactionOutput
 from transaction.uxto_manager import UTXOManager
 
@@ -11,22 +12,28 @@ from utils.key_manager import KeyManager
 import os
 import json
 
+from core.client_core import ClientCore
+
 
 class SimpleBC_Gui(Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, my_port, c_host, c_port):
         Frame.__init__(self, parent)
         self.parent = parent
         self.parent.protocol('WM_DELETE_WINDOW', self.quit)
         self.coin_balance = StringVar(self.parent, '0')
         self.status_message = StringVar(self.parent, 'No coin to be sent')
-        self.initApp()
+        self.initApp(my_port, c_host, c_port)
         self.setupGUI()
 
     def quit(self, event=None):
         self.parent.destroy()
 
-    def initApp(self):
+    def initApp(self, my_port, c_host, c_port):
         print('SimpleBitcoin client is now activating...')
+
+        self.c_core = ClientCore(my_port, c_host, c_port)
+        self.c_core.start()
+
         self.km = KeyManager()
         self.um = UTXOManager(self.km.my_address())
 
@@ -269,7 +276,13 @@ class SimpleBC_Gui(Frame):
                 signed = self.km.compute_digital_signature(to_be_signed)
                 new_tx = json.loads(to_be_signed)
                 new_tx['signature'] = signed
-                print('signed new_tx:', json.dumps(new_tx))
+
+                # TransactionをP2Pネットワークに送信
+                tx_strings = json.dumps(new_tx)
+                self.c_core.send_message_to_my_core_node(
+                    MSG_NEW_TRANSACTION, tx_strings)
+                print('signed new_tx:', tx_strings)
+
                 self.um.put_utxo_tx(t.to_dict())
 
                 del_list = []
@@ -288,11 +301,23 @@ class SimpleBC_Gui(Frame):
         self.update_balance()
 
 
-def main():
+def main(my_port, c_host, c_port):
     root = Tk()
-    app = SimpleBC_Gui(root)
+    app = SimpleBC_Gui(root, my_port, c_host, c_port)
     root.mainloop()
 
 
 if __name__ == '__main__':
-    main()
+
+    args = sys.argv
+
+    if len(args) == 4:
+        my_port = int(args[1])
+        c_host = args[2]
+        c_port = int(args[3])
+    else:
+        print('Param Error')
+        print('$ Wallet_app.py <my_port> <core_node_ip_address> <core_node_port_num>')
+        quit()
+
+    main(my_port, c_host, c_port)
