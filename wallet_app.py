@@ -4,9 +4,12 @@ from tkinter import messagebox
 from tkinter import filedialog
 from tkinter import ttk
 from tkinter.ttk import Button, Style
+from transaction.transaction import CoinbaseTransaction, Transaction, TransactionInput, TransactionOutput
+from transaction.uxto_manager import UTXOManager
 
 from utils.key_manager import KeyManager
 import os
+import json
 
 
 class SimpleBC_Gui(Frame):
@@ -25,6 +28,21 @@ class SimpleBC_Gui(Frame):
     def initApp(self):
         print('SimpleBitcoin client is now activating...')
         self.km = KeyManager()
+        self.um = UTXOManager(self.km.my_address())
+
+        t1 = CoinbaseTransaction(self.km.my_address())
+        t2 = CoinbaseTransaction(self.km.my_address())
+        t3 = CoinbaseTransaction(self.km.my_address())
+        t4 = CoinbaseTransaction(self.km.my_address(), 20)
+
+        transactions = []
+        transactions.append(t1.to_dict())
+        transactions.append(t2.to_dict())
+        transactions.append(t3.to_dict())
+        transactions.append(t4.to_dict())
+
+        self.um.extract_utxos(transactions)
+        self.update_balance()
 
     def display_info(self, info):
         pass
@@ -33,7 +51,8 @@ class SimpleBC_Gui(Frame):
         self.status_message.set(info)
 
     def update_balance(self):
-        pass
+        bal = str(self.um.my_balance)
+        self.coin_balance.set(bal)
 
     def create_menu(self):
         top = self.winfo_toplevel()
@@ -98,9 +117,9 @@ class SimpleBC_Gui(Frame):
                 file.close()
                 f.destroy()
                 f2.destroy()
-                # self.um = UTXM(self.km.my_address())
-                # self.um.my_balance = 0
-                # self.update_balance()
+                self.um = UTXOManager(self.km.my_address())
+                self.um.my_balance = 0
+                self.update_balance()
 
         f = Tk()
         label0 = Label(
@@ -129,9 +148,9 @@ class SimpleBC_Gui(Frame):
             f1.close()
 
             f.destroy()
-            # self.um = UTXM(self.km.my_address())
-            # self.um.my_balance = 0
-            # self.update_balance()
+            self.um = UTXOManager(self.km.my_address())
+            self.um.my_balance = 0
+            self.update_balance()
 
         f = Tk()
         f.title('New Key Gene')
@@ -184,14 +203,14 @@ class SimpleBC_Gui(Frame):
         self.label2 = Label(lf2, text='Amount to pay : ')
         self.label2.grid(row=1, pady=5)
 
-        self.amoutBox = Entry(lf2, bd=2)
-        self.amoutBox.grid(row=1, column=1, pady=5, sticky='NSEW')
+        self.amountBox = Entry(lf2, bd=2)
+        self.amountBox.grid(row=1, column=1, pady=5, sticky='NSEW')
 
         self.label3 = Label(lf2, text='Fee (Optional) :')
         self.label3.grid(row=2, pady=5)
 
-        self.amoutBox2 = Entry(lf2, bd=2)
-        self.amoutBox2.grid(row=2, column=1, pady=5, sticky='NSEW')
+        self.feeBox = Entry(lf2, bd=2)
+        self.feeBox.grid(row=2, column=1, pady=5, sticky='NSEW')
 
         self.label4 = Label(lf2, text='')
         self.label4.grid(row=3, pady=5)
@@ -205,7 +224,68 @@ class SimpleBC_Gui(Frame):
         stbar.pack(side=BOTTOM, fill=X)
 
     def sendCoins(self):
-        pass
+        sendAtp = self.amountBox.get()
+        receipentKey = self.recipient_pubkey.get()
+        sendFee = self.feeBox.get()
+        result = None
+
+        if not sendAtp:
+            messagebox.showwarning(
+                'Warning', 'Please enter the Amount to pay.')
+        elif len(receipentKey) <= 1:
+            messagebox.showwarning(
+                'Warning', 'Please enter the Receipient Address.')
+        elif not sendFee:
+            sendFee = 0
+        else:
+            result = messagebox.askyesno(
+                'Confirmation', 'Sending {} SimpleBitcoins to :\n {}'.format(sendAtp, receipentKey))
+
+        if result:
+            print('SEnding {} SimpleBitcoins to reciever: \n {}'.format(
+                sendAtp, receipentKey))
+
+            utxo, idx = self.um.get_utxo_tx(0)
+            t = Transaction(
+                [TransactionInput(utxo, idx)],
+                [TransactionOutput(receipentKey, sendAtp)]
+            )
+
+            counter = 1
+            while t.is_enough_inputs(sendFee) is not True:
+                new_utxo, new_idx = self.um.get_utxo_tx(counter)
+                t.inputs.append(TransactionInput(new_utxo, new_idx))
+                counter += 1
+                if counter > len(self.um.utxo_txs):
+                    messagebox.showwarning(
+                        'Short of Coin.', 'Not enough coin to be sent...')
+                    break
+
+            if t.is_enough_inputs(sendFee) is True:
+                change = t.compute_change(sendFee)
+                t.outputs.append(TransactionOutput(
+                    self.km.my_address(), change))
+                to_be_signed = json.dumps(t.to_dict(), sort_Keys=True)
+                signed = self.km.compute_digital_signature(to_be_signed)
+                new_tx = json.loads(to_be_signed)
+                new_tx['signature'] = signed
+                print('signed new_tx:', json.dumps(new_tx))
+                self.um.put_utxo_tx(t.to_dict())
+
+                del_list = []
+                to_be_deleted = 0
+                while to_be_deleted < counter:
+                    del_tx = self.um.get_utxo_tx(to_be_deleted)
+                    del_list.append(del_tx)
+                    to_be_deleted += 1
+
+                for dx in del_list:
+                    self.um.remove_utxo_tx(dx)
+
+        self.amountBox.delete(0, END)
+        self.feeBox.delete(0, END)
+        self.recipient_pubkey.delete(0, END)
+        self.update_balance()
 
 
 def main():

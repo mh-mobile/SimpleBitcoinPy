@@ -53,6 +53,13 @@ class Transaction:
         else:
             return False
 
+    def compute_change(self, fee):
+        total_in = sum(
+            i.transactioin.outputs[i.output_index].value for i in self.inputs)
+        total_out = sum(int(o.value) for o in self.outputs) + int(fee)
+        delta = total_in - total_out
+        return delta
+
 
 class CoinbaseTransaction(Transaction):
     def __init__(self, recipent_address, value=30):
