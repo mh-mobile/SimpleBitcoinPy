@@ -1,3 +1,6 @@
+import copy
+
+
 class UTXOManager:
     def __init__(self, address):
         print('Initializing UTXOManager...')
@@ -6,7 +9,7 @@ class UTXOManager:
         self.my_balance = 0
 
     def extract_utxos(self, txs):
-        print('extract_utxo called!')
+        print('extract_utxos called!')
         outputs = []
         inputs = []
         idx = 0
@@ -22,13 +25,16 @@ class UTXOManager:
                 if o_recipient == self.my_address:
                     inputs.append(t)
 
-        if outputs is not []:
-            for o in outputs:
+        outputs_copy = copy.deepcopy(outputs)
+
+        if outputs_copy is not []:
+            for o in outputs_copy:
                 if inputs is not []:
                     for i in inputs:
                         for i_i in i['inputs']:
                             if o == i_i['transaction']:
-                                outputs.remove(0)
+                                if o in outputs:
+                                    outputs.remove(o)
                 else:
                     break
         else:
@@ -67,7 +73,7 @@ class UTXOManager:
         txs = self.utxo_txs
         for t in txs:
             for txout in t[0]['outputs']:
-                print('txout: ', txout)
+                # print('txout: ', txout)
                 if txout['recipient'] == self.my_address:
                     balance += txout['value']
 

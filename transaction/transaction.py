@@ -1,3 +1,5 @@
+from time import time
+
 
 class TransactionInput:
     def __init__(self, transaction, output_index):
@@ -19,7 +21,7 @@ class TransactionOutput:
 
     def to_dict(self):
         d = {
-            'recipient_address': self.recipient,
+            'recipient': self.recipient,
             'value': self.value
         }
         return d
@@ -29,11 +31,13 @@ class Transaction:
     def __init__(self, inputs, outputs):
         self.inputs = inputs
         self.outputs = outputs
+        self.timestamp = time()
 
     def to_dict(self):
         d = {
             'inputs': list(map(TransactionInput.to_dict, self.inputs)),
             'outputs': list(map(TransactionOutput.to_dict, self.outputs)),
+            'timestamp': self.timestamp
         }
 
         return d
@@ -54,6 +58,14 @@ class CoinbaseTransaction(Transaction):
     def __init__(self, recipent_address, value=30):
         self.inputs = []
         self.outputs = [TransactionOutput(recipent_address, value)]
+        self.timestamp = time()
+        self.timestamp = time()
 
     def to_dict(self):
-        return super().to_dict()
+        d = {
+            'inputs': [],
+            'outputs': list(map(TransactionOutput.to_dict, self.outputs)),
+            'timestamp': self.timestamp,
+            'coinbase_transaction': True
+        }
+        return d
