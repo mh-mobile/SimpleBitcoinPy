@@ -1,7 +1,7 @@
 import socket
 
 from p2p.connection_manager_4edge import ConnectionManager4Edge
-from p2p.message_manager import MSG_ENHANCED, RSP_FULL_CHAIN
+from p2p.message_manager import MSG_ENHANCED, MSG_REQUEST_FULL_CHAIN, RSP_FULL_CHAIN
 from p2p.my_protocol_message_handler import MyProtocolMessageHandler
 from p2p.my_protocol_message_store import MessageStore
 
@@ -63,3 +63,8 @@ class ClientCore:
             return 'client_core_api'
         else:
             print('not implemented api was used')
+
+    def send_req_full_chain_to_my_core_node(self):
+        print('send_req_full_chain_to_my_core_node called')
+        new_message = self.cm.get_message_text(MSG_REQUEST_FULL_CHAIN)
+        self.cm.send_msg((self.my_core_host, self.my_core_port), new_message)

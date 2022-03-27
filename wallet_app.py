@@ -22,7 +22,7 @@ class SimpleBC_Gui(Frame):
         self.parent.protocol('WM_DELETE_WINDOW', self.quit)
         self.coin_balance = StringVar(self.parent, '0')
         self.status_message = StringVar(self.parent, 'No coin to be sent')
-        self.initApp(my_port, c_host, c_port)
+        self.initApp(my_port, c_host, c_port, self.update_callback)
         self.setupGUI()
 
     def quit(self, event=None):
@@ -53,6 +53,10 @@ class SimpleBC_Gui(Frame):
 
     def display_info(self, info):
         pass
+
+    def update_callback(self):
+        print('update_callback was called!')
+        self.update_balance()
 
     def update_status(self, info):
         self.status_message.set(info)
@@ -99,7 +103,7 @@ class SimpleBC_Gui(Frame):
         key_info.pack()
 
     def update_block_chain(self):
-        pass
+        self.c_core.send_req_full_chain_to_my_core_node()
 
     def show_input_dialog_for_key_loading(self):
         def load_my_keys():
