@@ -56,6 +56,9 @@ class SimpleBC_Gui(Frame):
 
     def update_callback(self):
         print('update_callback was called!')
+        s_transactions = self.c_core.get_stored_transactions_from_bc()
+        print(s_transactions)
+        self.um.extract_utxos(s_transactions)
         self.update_balance()
 
     def update_status(self, info):

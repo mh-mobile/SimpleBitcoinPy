@@ -1,4 +1,7 @@
+from copyreg import pickle
 import socket
+from blockchain.block_builder import BlockBuilder
+from blockchain.blockchain_manager import BlockchainManager
 
 from p2p.connection_manager_4edge import ConnectionManager4Edge
 from p2p.message_manager import MSG_ENHANCED, MSG_REQUEST_FULL_CHAIN, RSP_FULL_CHAIN
@@ -26,6 +29,10 @@ class ClientCore:
         self.mpmh_callback = mpmh_callback
         self.callback = callback
 
+        self.bb = BlockBuilder()
+        my_genesis_blokc = self.bb.generate_genesis_block()
+        self.bm = BlockchainManager(my_genesis_blokc.to_dict())
+
     def start(self):
         self.client_state = STATE_ACTIVE
         self.cm.start()
@@ -51,6 +58,16 @@ class ClientCore:
     def __handle_message(self, msg):
         if msg[2] == RSP_FULL_CHAIN:
             print('handle RSP_FULL_CHAIN')
+            new_block_chain = pickle.loads(msg[4].encode('utf8'))
+            result, pool_4_orphan_blocks = self.bm.resolve_conflicts(
+                new_block_chain)
+            print('blockchain received from central: ', result)
+            if result is not None:
+                self.prev_block_hash = result
+                print('callback called')
+                self.callback()
+            else:
+                print('Received blockchain is useless...')
         elif msg[2] == MSG_ENHANCED:
             self.mpmh.handle_message(msg[4], self.__client_api)
 
@@ -68,3 +85,6 @@ class ClientCore:
         print('send_req_full_chain_to_my_core_node called')
         new_message = self.cm.get_message_text(MSG_REQUEST_FULL_CHAIN)
         self.cm.send_msg((self.my_core_host, self.my_core_port), new_message)
+
+    def get_stored_transactions_from_bc(self):
+        self.bm.get_stored_transactions_from_bc()

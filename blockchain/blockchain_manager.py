@@ -4,6 +4,8 @@ import threading
 import json
 import binascii
 
+from transaction.transaction import Transaction
+
 
 class BlockchainManager:
     def __init__(self, genesis_block):
@@ -152,3 +154,19 @@ class BlockchainManager:
             return self.chain
         else:
             return None
+
+    def get_stored_transactions_from_bc(self):
+        print('get_stored_transaction_from_bc was called!')
+        current_index = 1
+        stored_transactions = []
+
+        while current_index < len(self.chain):
+            block = self.chain[current_index]
+            transactions = block['transactions']
+
+            for t in transactions:
+                stored_transactions.append(json.loads(t))
+
+            current_index += 1
+
+        return stored_transactions
