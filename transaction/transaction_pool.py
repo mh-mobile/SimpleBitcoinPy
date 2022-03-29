@@ -31,3 +31,26 @@ class TransactionPool:
         with self.lock:
             print('transaction pool will be renewed to ...', transactions)
             self.transactions = transactions
+
+    def get_total_fee_from_tp(self):
+        print('get_total_fee_from_tp is called')
+        transactions = self.transactions
+        result = 0
+        for t in transactions:
+            checked = self.check_type_of_transaction(t)
+            if checked:
+                total_in = sum(
+                    i['transaction']['outputs'][i['output_index']]['value']
+                    for i in t['inputs']
+                )
+                total_out = sum(o['value'] for o in t['outputs'])
+                delta = total_in - total_out
+                result += delta
+
+        return result
+
+    def check_type_of_transaction(self, transaction):
+        if transaction['t_type'] == 'basic' or transaction['t_type'] == 'coinbase_transaction':
+            return True
+        else:
+            return False

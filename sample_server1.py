@@ -1,4 +1,5 @@
 import signal
+import sys
 
 from core.server_core import ServerCore
 
@@ -14,12 +15,24 @@ def shutdown_server():
     my_p2p_server.shutdown()
 
 
-def main():
+def main(my_port, p_phrase):
     signal.signal(signal.SIGINT, signal_handler)
     global my_p2p_server
-    my_p2p_server = ServerCore(50082)
+    my_p2p_server = ServerCore(my_port, None, None, p_phrase)
     my_p2p_server.start()
 
 
 if __name__ == '__main__':
-    main()
+
+    args = sys.argv
+
+    if len(args) == 3:
+        my_port = int(args[1])
+        p_phrase = args[2]
+    else:
+        print('Param Error')
+        print('$ sample_server')
+        print('$ sample_server1.py <my_port> <pass_phrase_for_keys>')
+        quit()
+
+    main(my_port, p_phrase)

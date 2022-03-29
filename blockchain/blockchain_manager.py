@@ -3,6 +3,7 @@ import hashlib
 import threading
 import json
 import binascii
+import transaction
 
 from transaction.transaction import Transaction
 
@@ -170,3 +171,66 @@ class BlockchainManager:
             current_index += 1
 
         return stored_transactions
+
+    def has_this_output_in_my_chain(self, transaction_output):
+        print('has_this_output_in_my_chain was called!')
+        current_index = 1
+
+        if len(self.chain) == 1:
+            print('only the genesis block is in my chain')
+            return False
+
+        while current_index < len(self.chain):
+            block = self.chain[current_index]
+            transactions = block['trnasactions']
+
+            for t in transactions:
+                t = json.loads(t)
+                if t['t_type'] == 'basic' or t['t_type'] == 'coinbase_transaction':
+                    if t['inputs'] != []:
+                        inputs_t = t['inputs']
+                        for it in inputs_t:
+                            print(it['transaction']['outputs']
+                                  [it['output_index']])
+                            if it['transaction']['outputs'][it['output_index']] == transaction_output:
+                                print(
+                                    'This TransactionOutput was already used', transaction_output)
+                                return True
+
+            current_index += 1
+
+        return False
+
+    def is_valid_output_in_my_chain(self, transaction_output):
+        print('is_valid_output_in_my_chain was called!')
+        current_index = 1
+
+        while current_index < len(self.chain):
+            block = self.chain[current_index]
+            transactions = block['transactions']
+
+            for t in transactions:
+                t = json.loads(t)
+                if t['t_type'] == 'basic' or t['t_type'] == 'coinbase_transaction':
+                    outputs_t = t['outputs']
+                    for ot in outputs_t:
+                        if ot == transaction_output:
+                            return True
+
+            current_index += 1
+
+        return False
+
+    def has_this_output_in_my_tp(self, transaction_output):
+        print('has_this_output_in_my_tp is called')
+        transactions = self.transactions
+        for t in transactions:
+            inputs_t = t['inputs']
+            for it in inputs_t:
+                if it['transaction']['outputs'][it['output_index']] == transaction_output:
+                    return True
+
+        return False
+
+    def get_my_chain_length(self):
+        return len(self.chain)

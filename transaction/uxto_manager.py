@@ -78,3 +78,19 @@ class UTXOManager:
                     balance += txout['value']
 
         self.my_balance = balance
+
+    def is_sbc_transaction(self, tx):
+        print(tx['t_type'])
+        tx_t = tx['t_type']
+
+        t_basic = 'basic'
+        t_coinbase = 'coinbase_transaction'
+        unknown = 'unknown'
+
+        if tx_t != t_basic:
+            if tx_t != t_coinbase:
+                return False, unknown
+            else:
+                return True, t_coinbase
+        else:
+            return True, t_basic
